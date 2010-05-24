@@ -1,0 +1,49 @@
+Aws CloudfrontSecure
+===================
+
+Plugin to allow for Custom Policy-based downloads from Amazon CloudFront, useful for paid-download scenarios.
+
+This allows you to easily provide CDN downloads for files restricted to expiration dates & IP addresses.
+
+Requirements
+============
+  sudo gem install right_aws
+  sudo gem install right_http_connection
+
+Built for right_aws v2.0.0 and right_http_connection v1.2.4
+
+
+Credits & References
+====================
+This is a reopenning of the same class from the right_aws gem.
+http://rightaws.rubyforge.org/right_aws_gem_doc/
+
+Strongly based on wiseleyb's fork: http://github.com/wiseleyb/right_aws
+with the addition of Canned Policies, which permit IP restrictions.
+
+
+Usage
+=====
+
+You can either use the class methods, which requires passing in all parameters,
+or create one instance and pass only the varying parameters.
+
+If you're unfamiliar with CloudFront, you'll need that 100% set up first:
+http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/index.html
+
+You can put your AWS CF public key (the .pem file) in:
+RAILS_ROOT/config/cloudfront_keys/
+
+Examples
+=======
+cf_distro = RightAws::AcfInterface::AcfDistribution.new(
+     'http://jnefoi457dfje.cloudfront.net/','JFEASDFJIKFASDFOENFDS','pk-JFEASDFJIKFASDFOENFDS.pem'
+)
+
+cf_distro.get_private_download_url(
+     :resource => 'my_protected_song.mp3',
+     :ip_address => '12.34.56.78',
+     :expires =>  3.hours.from_now
+)
+
+Copyright (c) 2010 robtierney et al., released under the MIT license
