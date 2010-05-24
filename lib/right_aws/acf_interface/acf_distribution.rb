@@ -172,14 +172,14 @@ module RightAws
       end
 
       def self.signature_for_resource(resource, key_id, private_key_file_name, expires = Time.now + 1.hour, ip_address=nil)
-          puts "resource: #{resource}"
-          puts "key_id (not used): #{key_id}"
-          puts "private_key_file_name: #{private_key_file_name}"
-          puts "expires: #{expires}"
+          #puts "resource: #{resource}"
+          #puts "key_id (not used): #{key_id}"
+          #puts "private_key_file_name: #{private_key_file_name}"
+          #puts "expires: #{expires}"
           policy = policy_for_resource(resource, expires, ip_address)
-          puts "policy: #{policy}"
+          #puts "policy: #{policy}"
           key = private_key_file_contents(private_key_file_name)
-          puts "key: #{key}"
+          #puts "key: #{key}"
           kill_newlines(url_safe(Base64.encode64(key.sign(OpenSSL::Digest::SHA1.new, (policy)))))
       end
 
