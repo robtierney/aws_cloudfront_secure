@@ -155,7 +155,7 @@ module RightAws
         sig = signature_for_resource(resource, options[:key_pair_id], options[:key_pair_pem_file_name], expires, ip_address)
         options[:prepend_file_type] == true if options[:prepend_file_type].blank?
         res << "#{resource.split(".").last}:" if options[:prepend_file_type] == true
-        res << "#{resource}?"
+        res << (options[:prepend_file_type] ? "#{strip_file_extension(resource)}?" : "#{resource}?")
         policy = policy_for_resource(resource, expires, ip_address)  # TODO: resource might be an inadequate param, may require URL.
         # p = params_for_custom_policy_resource(policy, sig, options[:key_pair_id]) # UNTESTED!
         p = params_for_canned_policy_resource(expires, sig, options[:key_pair_id])  #TODO: make this CUSTOM, not CANNED.  CANNED is limited to expiry-date only.
@@ -166,7 +166,7 @@ module RightAws
         end
         return res
       end
- 
+
       # creates a expiring signed url for an object in a private distribution
       # options
       # => :distibution   cloudfront domain name or cname alias
@@ -240,6 +240,12 @@ module RightAws
 
       def self.filepath_for(filename)
         absolute_path?(filename) ? filename : "#{default_private_key_path}/#{filename}"
+      end
+
+      def self.strip_file_extension(filename)
+        splitup = filename.split('.')
+        ext = splitup.pop if splitup.size > 1
+        splitup.join('.')
       end
 
       def self.default_private_key_path
