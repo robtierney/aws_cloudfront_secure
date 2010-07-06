@@ -65,7 +65,7 @@ module RightAws
       # => encode_params = false          if true this will encode params after ?
       # => prepend_file_type = true       if the resource is vid.mp4 it will create mp4:vid.mp4
       # => ip_address                     NOT IMPLEMENTED - allows you to restrict the url to one IP Address - this will require changing to a custom policy instead of canned policy.  See the non-streaming method to see how.
-      def self.get_private_streaming_file(options = {})
+      def get_private_streaming_file(options = {})
         [:resource].each do |k|
           raise ArgumentError if options[k].nil?
         end
@@ -79,6 +79,28 @@ module RightAws
           :key_pair_id=>@key_pair_id,
           :key_pair_pem_file_name=>@key_pair_pem_file_name
         )
+      end
+      
+      # creates an expiring streaming file + server in a hash => :file=>'mp3:Filename.mp3?Policy...', :server=>'rtmp://xxxxxx.cloudfront.net/cfx/st'
+      # options
+      # => resource                       required - aws key of resource to use
+      # => key_pair_id                    required - from amazon's key creation util (not the EC2 one though)
+      # => key_pair_pem_file_name         required - .pem file that goes with key_id
+      # => expires                        defaults to 1 hour - you can supply a Time object or an int (seconds since epoch)
+      # => encode_params = false          if true this will encode params after ?
+      # => distribution = nil             if !nil? this will add &streamer=#{@url}/cfx/st
+      # => prepend_file_type = true       if the resource is vid.mp4 it will create mp4:vid.mp4
+      # => ip_address                     NOT IMPLEMENTED - allows you to restrict the url to one IP Address - this will require changing to a custom policy instead of canned policy.  See the non-streaming method to see how.
+      def get_private_streaming_file_and_server(options = {})
+        res = get_private_streaming_file({:prepend_file_type=>true}.merge(options))
+        return {:file=>res, :server=>get_streaming_server(options)}
+      end
+
+      # returns 'rtmp://xxxxxxxxxxx.cloudfront.net/cfx/st'
+      # options
+      # => distribution                   optional - allows you to change the distro.
+      def get_streaming_server(options={})
+        self.class.get_streaming_server({:distribution=>@distribution}.merge(options))
       end
 
       #options
@@ -119,7 +141,7 @@ module RightAws
       # => ip_address                     NOT IMPLEMENTED - allows you to restrict the url to one IP Address - this will require changing to a custom policy instead of canned policy.  See the non-streaming method to see how. 
       def self.get_private_streaming_file(options = {})
         [:resource, :key_pair_id, :key_pair_pem_file_name].each do |k|
-          options.requires!(k)
+          raise ArgumentError if options[k].nil?
         end
         resource = options[:resource]
         resource = resource.reverse.chop!.reverse if resource.starts_with?("/")
@@ -131,6 +153,8 @@ module RightAws
         options[:prepend_file_type] == true if options[:prepend_file_type].blank?
         res << "#{resource.split(".").last}:" if options[:prepend_file_type] == true
         res << "#{resource}?"
+        policy = policy_for_resource(resource, expires, ip_address)  # TODO: resource might be an inadequate param, may require URL.
+        # p = params_for_custom_policy_resource(policy, sig, options[:key_pair_id]) # UNTESTED!
         p = params_for_canned_policy_resource(expires, sig, options[:key_pair_id])  #TODO: make this CUSTOM, not CANNED.  CANNED is limited to expiry-date only.
         if options[:encode_params].to_s == "true"
           res << "#{url_encode(p)}"
@@ -139,7 +163,7 @@ module RightAws
         end
         return res
       end
-
+ 
       # creates a expiring signed url for an object in a private distribution
       # options
       # => :distibution   cloudfront domain name or cname alias
@@ -149,11 +173,15 @@ module RightAws
       # => :expires       OPTIONAL - defaults to 1 hour, either Epoch (Unix) or Time object
       def self.get_private_streaming_url_for_jw_player(options = {})
         [:distribution, :resource, :key_pair_id, :key_pair_pem_file_name].each do |k|
-          options.requires!(k)
+          raise ArgumentError if options[k].nil?
         end
         options[:prepend_file_type] = true
         options[:encode_params] = true
-        "file=#{get_private_streaming_file(options)}&streamer=rtmp://#{options[:distribution]}/cfx/st"
+        "file=#{get_private_streaming_file(options)}&streamer=rtmp://#{options[:distribution]}cfx/st"
+      end
+
+      def self.get_streaming_server(options={})
+        "rtmp://#{options[:distribution]}cfx/st"
       end
 
       protected
