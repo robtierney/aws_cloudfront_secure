@@ -11,6 +11,9 @@ module RightAws
     #-----------------------------------------------------------------
     class AcfDistribution
 
+      PROTOCOL_REGEX = /\A\w+:\/\//
+
+
       # distribution             - required - url of the distribution http://d3561sl5litxcx.cloudfront.net or some cname http://images.mywebsite.com
       # key_pair_id              - required - from amazon's key creation util
       # key_pair_pem_file_name   - required - Defaults to <RAILS_ROOT>/config/cloudfront_keys/<filename> unless you give an absolute path.
@@ -177,11 +180,11 @@ module RightAws
         end
         options[:prepend_file_type] = true
         options[:encode_params] = true
-        "file=#{get_private_streaming_file(options)}&streamer=rtmp://#{options[:distribution]}cfx/st"
+        "file=#{get_private_streaming_file(options)}&streamer=#{get_streaming_server(options)}"
       end
 
       def self.get_streaming_server(options={})
-        "rtmp://#{options[:distribution]}cfx/st"
+        "rtmp://#{clear_protocol(options[:distribution])}cfx/st"
       end
 
       protected
@@ -245,6 +248,10 @@ module RightAws
 
       def self.absolute_path?(string)
         string.starts_with?("/")
+      end
+
+      def self.clear_protocol(string)
+        string.gsub(PROTOCOL_REGEX, '')
       end
 
     end
