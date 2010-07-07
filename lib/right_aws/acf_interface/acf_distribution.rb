@@ -14,7 +14,7 @@ module RightAws
       PROTOCOL_REGEX = /\A\w+:\/\//
 
 
-      # distribution             - required - url of the distribution http://d3561sl5litxcx.cloudfront.net or some cname http://images.mywebsite.com
+      # distribution             - required - url of the distribution http://xxxxxxxxxxxx.cloudfront.net or some cname http://images.mywebsite.com
       # key_pair_id              - required - from amazon's key creation util
       # key_pair_pem_file_name   - required - Defaults to <RAILS_ROOT>/config/cloudfront_keys/<filename> unless you give an absolute path.
       def initialize(distribution, key_pair_id, key_pair_pem_file_name)
@@ -156,9 +156,9 @@ module RightAws
         options[:prepend_file_type] == true if options[:prepend_file_type].blank?
         res << "#{resource.split(".").last}:" if options[:prepend_file_type] == true
         res << (options[:prepend_file_type] ? "#{strip_file_extension(resource)}?" : "#{resource}?")
-        policy = policy_for_resource(resource, expires, ip_address)  # TODO: resource might be an inadequate param, may require URL.
-        # p = params_for_custom_policy_resource(policy, sig, options[:key_pair_id]) # UNTESTED!
-        p = params_for_canned_policy_resource(expires, sig, options[:key_pair_id])  #TODO: make this CUSTOM, not CANNED.  CANNED is limited to expiry-date only.
+        policy = policy_for_resource(resource, expires, ip_address)  
+        p = params_for_custom_policy_resource(policy, sig, options[:key_pair_id]) 
+        # p = params_for_canned_policy_resource(expires, sig, options[:key_pair_id])
         if options[:encode_params].to_s == "true"
           res << "#{url_encode(p)}"
         else
